@@ -1,27 +1,30 @@
-const express = require('express');
-const fetch = require('node-fetch');
-const app = express();
+import express from "express";
+import fetch from "node-fetch";
+import cors from "cors";
 
-app.get('/proxy', async (req, res) => {
-  const targetUrl = req.query.url;
-  if (!targetUrl) return res.status(400).send("Missing ?url");
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+
+app.get("/proxy", async (req, res) => {
+  const videoUrl = req.query.url;
+  if (!videoUrl || !videoUrl.startsWith("http://")) {
+    return res.status(400).send("Invalid URL");
+  }
 
   try {
-    const response = await fetch(targetUrl, {
-      headers: {
-        'User-Agent': req.headers['user-agent'] || '',
-        'Referer': targetUrl,
-        'Origin': new URL(targetUrl).origin,
-      }
-    });
+    const videoResponse = await fetch(videoUrl);
+    if (!videoResponse.ok) throw new Error("Failed to fetch video");
 
-    res.set('Content-Type', response.headers.get('content-type') || 'application/octet-stream');
-    res.set('Access-Control-Allow-Origin', '*');
-    response.body.pipe(res);
+    res.set("Content-Type", videoResponse.headers.get("content-type") || "video/mp4");
+    videoResponse.body.pipe(res);
   } catch (err) {
-    res.status(500).send("Proxy error: " + err.message);
+    console.error("Proxy error:", err);
+    res.status(500).send("Video proxy failed");
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`✅ Proxy Server is running on http://localhost:${PORT}`);
+});
