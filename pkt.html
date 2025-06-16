@@ -1,53 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>PKT Flix Proxy Player</title>
-  <script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
+  <meta charset="UTF-8" />
+  <title>PKT Flix HLS.js Proxy Player</title>
   <style>
     body {
-      margin: 0;
-      background-color: black;
-      overflow: hidden;
+      margin: 0; background: black; display: flex; justify-content: center; align-items: center; height: 100vh;
+      flex-direction: column; color: white; font-family: sans-serif;
     }
-    #player {
-      width: 100vw;
-      height: 100vh;
+    video {
+      width: 90vw; max-width: 800px; height: 450px; background: black;
     }
     .watermark {
-      position: absolute;
-      bottom: 5px;
-      right: 10px;
-      color: white;
+      margin-top: 8px;
       font-size: 14px;
-      font-family: sans-serif;
       opacity: 0.7;
+      user-select: none;
     }
   </style>
 </head>
 <body>
-  <div id="player"></div>
+  <video id="video" controls></video>
   <div class="watermark">PKT Flix</div>
 
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
+    const video = document.getElementById('video');
     const urlParams = new URLSearchParams(window.location.search);
-    const videoUrl = urlParams.get("url");
+    const streamUrl = urlParams.get('url');
 
-    // ✅ তোমার Proxy Server URL (Vercel-এর m3u8-proxy)
+    // তোমার proxy base URL
     const proxyBase = "https://m3u8-proxy-opal.vercel.app/api?url=";
 
-    if (videoUrl) {
-      new Clappr.Player({
-        source: proxyBase + encodeURIComponent(videoUrl),
-        parentId: "#player",
-        autoPlay: true,
-        mute: false,
-        width: "100%",
-        height: "100%",
+    if (Hls.isSupported() && streamUrl) {
+      const hls = new Hls({
+        xhrSetup: function(xhr, url) {
+          // এখানে URL কে proxy URL এ রিডাইরেক্ট করবো
+          // কিন্তু এটা HLS.js এ কাজ করবে না সরাসরি, তাই নিচের হ্যাক প্রয়োজন
+        }
+      });
+
+      // হ্যাক: m3u8 ও ts ফাইলগুলোকে প্রোক্সি করে লোড করার জন্য নিচের মতো করতে হবে:
+      // source এর আগে proxy URL যুক্ত করবো
+
+      // মুল stream URL কে proxy এর সাথে এঁকোড করে দিলাম
+      const proxiedUrl = proxyBase + encodeURIComponent(streamUrl);
+
+      hls.loadSource(proxiedUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, function() {
+        video.play();
+      });
+
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari direct support
+      video.src = streamUrl;
+      video.addEventListener('loadedmetadata', function() {
+        video.play();
       });
     } else {
-      document.getElementById("player").innerHTML =
-        "<p style='color:white;text-align:center;margin-top:20px;'>⚠️ কোনো ভিডিও লিংক পাওয়া যায়নি।</p>";
+      document.body.innerHTML = "<p style='color: white; text-align:center;'>⚠️ আপনার ব্রাউজার এই ভিডিও প্লেয়ার সমর্থন করে না।</p>";
     }
   </script>
 </body>
