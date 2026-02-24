@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>KOF 97 PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  background:#020617;
+  font-family:Arial;
+  color:white;
+  text-align:center;
+}
+
+.header{
+  background:#0f172a;
+  padding:12px;
+  font-size:22px;
+  font-weight:bold;
+}
+
+#game{
+  width:100%;
+  max-width:900px;
+  height:520px;
+  margin:auto;
+  background:black;
+}
+
+/* mobile buttons */
+.controls{
+  margin-top:10px;
+}
+
+.btn{
+  background:#1e293b;
+  border:none;
+  color:white;
+  padding:12px 16px;
+  margin:5px;
+  border-radius:10px;
+  font-size:16px;
+}
+
+.btn:active{
+  background:#ef4444;
+}
+
+.fullscreen{
+  background:#22c55e;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">🎮 KOF 97 PRO</div>
+
+<div id="game"></div>
+
+<div class="controls">
+  <button class="btn" onclick="coin()">COIN</button>
+  <button class="btn" onclick="start()">START</button>
+  <button class="btn fullscreen" onclick="goFull()">FULLSCREEN</button>
+</div>
+
+<script>
+EJS_player = "#game";
+EJS_core = "neogeo";
+EJS_gameUrl = "kof97.zip"; // ROM same folder
+EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
+</script>
+
+<script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
+
+<script>
+// extra controls
+function coin(){
+  EJS_emulator.gameManager.pressKey("shift");
+  setTimeout(()=>EJS_emulator.gameManager.releaseKey("shift"),200);
+}
+
+function start(){
+  EJS_emulator.gameManager.pressKey("enter");
+  setTimeout(()=>EJS_emulator.gameManager.releaseKey("enter"),200);
+}
+
+function goFull(){
+  let el=document.getElementById("game");
+  if(el.requestFullscreen) el.requestFullscreen();
+}
+</script>
+
+</body>
+</html>
